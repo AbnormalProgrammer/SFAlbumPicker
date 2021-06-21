@@ -6,8 +6,9 @@
 //
 
 import UIKit
+import Photos
 
-class ViewController: UIViewController {
+class ViewController: UIViewController,SFAlbumPickerViewControllerProtocol {
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -17,6 +18,17 @@ class ViewController: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        let pickerController:SFAlbumPickerViewController = SFAlbumPickerViewController.init()
+        pickerController.delegate = self
+        pickerController.modalPresentationStyle = .fullScreen
+        self.present(pickerController, animated: true) {
+        }
+    }
+    
+    func SFAlbumPickerViewControllerFailureCallback(_ controller: SFAlbumPickerViewController?, _ type: SFAlbumPickerErrorType) {
+    }
+    
+    func SFAlbumPickerViewControllerCallbackAsset(_ controller: SFAlbumPickerViewController, _ asset: PHAsset) {
     }
 }
 

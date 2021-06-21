@@ -22,7 +22,6 @@ class SFAlbumPickerViewCollectionViewCell: UICollectionViewCell {
     deinit {
         print("\(type(of: self))释放了")
     }
-    
     // MARK: - custom methods
     func customInitilizer() -> Void {
         self.translatesAutoresizingMaskIntoConstraints = false
@@ -48,7 +47,7 @@ class SFAlbumPickerViewCollectionViewCell: UICollectionViewCell {
     // MARK: - accessors
     internal var model:SFAlbumPickerViewMediaModel? {
         set {
-            
+            self.thumbnailImageView.image = newValue?.thumbnailImage
         }
         get {
             return nil
@@ -56,6 +55,7 @@ class SFAlbumPickerViewCollectionViewCell: UICollectionViewCell {
     }
     lazy private var selectButton:UIButton = {
         let result:UIButton = UIButton.init(type: .custom)
+        result.translatesAutoresizingMaskIntoConstraints = false
         result.setBackgroundImage(UIImage.init(named: "matchsuccess_close"), for: .normal)
         result.contentMode = .scaleToFill
         result.adjustsImageWhenHighlighted = false
@@ -64,7 +64,9 @@ class SFAlbumPickerViewCollectionViewCell: UICollectionViewCell {
     }()
     lazy private var thumbnailImageView:UIImageView = {
         let result:UIImageView = UIImageView.init()
-        result.contentMode = .scaleAspectFit
+        result.translatesAutoresizingMaskIntoConstraints = false
+        result.contentMode = .scaleAspectFill
+        result.clipsToBounds = true
         return result
     }()
     // MARK: - delegates

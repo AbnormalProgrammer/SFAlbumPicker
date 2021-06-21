@@ -18,11 +18,6 @@ class SFAlbumPickerViewMediaModel: NSObject {
         super.init()
         self.customInitilizer()
     }
-    
-    convenience init(_ asset:PHAsset) {
-        self.init()
-        self.asset = asset
-    }
     // MARK: - custom methods
     private func customInitilizer() -> Void {
     }

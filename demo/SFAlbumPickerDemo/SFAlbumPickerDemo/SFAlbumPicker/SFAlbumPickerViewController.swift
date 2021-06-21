@@ -6,6 +6,17 @@
 //
 
 import UIKit
+import Photos
+
+internal enum SFAlbumPickerErrorType {
+    case NotAuthorized
+    case NoError
+}
+
+protocol SFAlbumPickerViewControllerProtocol:NSObjectProtocol {
+    func SFAlbumPickerViewControllerFailureCallback(_ controller:SFAlbumPickerViewController?,_ type:SFAlbumPickerErrorType) -> Void
+    func SFAlbumPickerViewControllerCallbackAsset(_ controller:SFAlbumPickerViewController,_ asset:PHAsset) -> Void
+}
 
 class SFAlbumPickerViewController: UIViewController,UICollectionViewDelegate,UICollectionViewDataSource,UICollectionViewDelegateFlowLayout {
     // MARK: - lifecycle
@@ -25,36 +36,46 @@ class SFAlbumPickerViewController: UIViewController,UICollectionViewDelegate,UIC
         // Dispose of any resources that can be recreated.
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+    }
     // MARK: - custom methods
     private func customInitilizer() -> Void {
         self.view.translatesAutoresizingMaskIntoConstraints = false
-        self.view.backgroundColor = UIColor.white
     }
     
     private func installUI() -> Void {
         self.view.addSubview(self.mediaCollectionView)
         
+        NSLayoutConstraint.init(item: self.view, attribute: .width, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 0, constant: self.view.bounds.width).isActive = true
+        NSLayoutConstraint.init(item: self.view, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 0, constant: self.view.bounds.height).isActive = true
         NSLayoutConstraint.init(item: self.mediaCollectionView, attribute: .top, relatedBy: .equal, toItem: self.view, attribute: .topMargin, multiplier: 1, constant: 0).isActive = true
         NSLayoutConstraint.init(item: self.mediaCollectionView, attribute: .leading, relatedBy: .equal, toItem: self.view, attribute: .leading, multiplier: 1, constant: 0).isActive = true
         NSLayoutConstraint.init(item: self.mediaCollectionView, attribute: .trailing, relatedBy: .equal, toItem: self.view, attribute: .trailing, multiplier: 1, constant: 0).isActive = true
         NSLayoutConstraint.init(item: self.mediaCollectionView, attribute: .bottom, relatedBy: .equal, toItem: self.view, attribute: .bottomMargin, multiplier: 1, constant: 0).isActive = true
 
-        self.viewModel.loadCompleteClosure = { [weak self]() in
+        self.viewModel.loadCompleteClosure = { [weak self](success,errorType) in
             DispatchQueue.main.async {
-                print("异步结束")
-                self?.mediaCollectionView.reloadData()
+                if success == true {
+                    self?.mediaCollectionView.reloadData()
+                } else {
+                    self?.delegate?.SFAlbumPickerViewControllerFailureCallback(self, errorType)
+                }
             }
         }
-        print("同步结束")
+        self.viewModel.loadAllPhotos()
     }
     // MARK: - public interfaces
     // MARK: - actions
     // MARK: - accessors
+    internal var delegate:SFAlbumPickerViewControllerProtocol?
     private let viewModel:SFAlbumPickerViewModel = SFAlbumPickerViewModel.init()
     lazy private var mediaCollectionView:UICollectionView = {
         let layout:UICollectionViewFlowLayout = UICollectionViewFlowLayout.init()
+        layout.minimumInteritemSpacing = 0
+        layout.minimumLineSpacing = 0
         let result:UICollectionView = UICollectionView.init(frame: CGRect.zero, collectionViewLayout: layout)
-        result.backgroundColor = .clear
+        result.translatesAutoresizingMaskIntoConstraints = false
         result.delegate = self
         result.dataSource = self
         result.register(SFAlbumPickerViewCollectionViewCell.self, forCellWithReuseIdentifier: self.viewModel.cellIdentifier)
@@ -78,7 +99,7 @@ class SFAlbumPickerViewController: UIViewController,UICollectionViewDelegate,UIC
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         switch indexPath.item {
         default:
-            print("点到了缩略图按钮")
+            self.delegate?.SFAlbumPickerViewControllerCallbackAsset(self, self.viewModel.mediaModels[indexPath.item].asset!)
         }
     }
     

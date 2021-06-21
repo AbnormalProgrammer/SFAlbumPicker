@@ -20,44 +20,64 @@ class SFAlbumPickerViewModel: NSObject {
     }
     // MARK: - custom methods
     private func customInitilizer() -> Void {
-        self.loadAllPhotos()
     }
     
     /*
      加载相册中所有的照片资源
      */
-    private func loadAllPhotos() -> Void {
+    internal func loadAllPhotos() -> Void {
+        let status:SFAlbumPickerErrorType = self.requestAuthorization()
+        if status == .NotAuthorized {
+            self.loadCompleteClosure!(false,status)
+        }
         DispatchQueue.global().async {
-            let fetchOption:PHFetchOptions = PHFetchOptions.init()
-            fetchOption.sortDescriptors = [NSSortDescriptor.init(key: "creationDate", ascending: true)]
-            fetchOption.fetchLimit = .zero
-            let result:PHFetchResult = PHAssetCollection.fetchAssetCollections(with: .album, subtype: .smartAlbumUserLibrary, options: nil)
-            result.enumerateObjects(options: .concurrent) { (asserts, index, stop) in
-                let assetResult:PHFetchResult = PHAsset.fetchAssets(in: asserts, options: fetchOption)
-                for index in 0..<assetResult.count {
-                    self.mediaModels.append(SFAlbumPickerViewMediaModel.init(assetResult[index]))
-                }
+            let fetchOptions:PHFetchOptions = PHFetchOptions.init()
+            fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: true)]
+            let fetchResult:PHFetchResult<PHAsset> = PHAsset.fetchAssets(with: fetchOptions)
+            var assets:[PHAsset] = [PHAsset].init()
+            fetchResult.enumerateObjects { (asset, index, stop) in
+                assets.append(asset)
             }
             let requestOption:PHImageRequestOptions = PHImageRequestOptions.init()
-            requestOption.deliveryMode = .fastFormat
+            requestOption.deliveryMode = .highQualityFormat
             requestOption.isSynchronous = true
             requestOption.resizeMode = .fast
             requestOption.isNetworkAccessAllowed = false
-            for iterator in self.mediaModels {
-                PHCachingImageManager.default().requestImage(for: iterator.asset!, targetSize: CGSize.init(width: self.itemWidth, height: self.itemWidth), contentMode: .aspectFit, options: requestOption) { image, dictionary in
-                    iterator.thumbnailImage = image
+            self.mediaModels = []
+            for iterator in assets {
+                PHCachingImageManager.default().requestImage(for: iterator, targetSize: CGSize.init(width: self.itemWidth, height: self.itemWidth), contentMode: .aspectFit, options: requestOption) { (image, info) in
+                    if image != nil {
+                        let newModel:SFAlbumPickerViewMediaModel = SFAlbumPickerViewMediaModel.init()
+                        newModel.asset = iterator
+                        newModel.thumbnailImage = image
+                        self.mediaModels.append(newModel)
+                    }
                 }
             }
             guard self.loadCompleteClosure != nil else {
                 return
             }
-            self.loadCompleteClosure!()
+            self.loadCompleteClosure!(true,status)
         }
+    }
+    
+    private func requestAuthorization() -> SFAlbumPickerErrorType {
+        var result:SFAlbumPickerErrorType = .NotAuthorized
+        if PHPhotoLibrary.authorizationStatus() != .authorized {
+            PHPhotoLibrary.requestAuthorization(for: .readWrite) { (status) in
+                if status == .authorized {
+                    result = .NoError
+                }
+            }
+        } else {
+            result = .NoError
+        }
+        return result
     }
     // MARK: - public interfaces
     // MARK: - actions
     // MARK: - accessors
-    internal var loadCompleteClosure:(() -> Void)?
+    internal var loadCompleteClosure:((Bool,SFAlbumPickerErrorType) -> Void)?
     internal let cellIdentifier:String = "LPLibraryViewCollectionViewCell"
     internal var itemWidth:CGFloat {
         get {
