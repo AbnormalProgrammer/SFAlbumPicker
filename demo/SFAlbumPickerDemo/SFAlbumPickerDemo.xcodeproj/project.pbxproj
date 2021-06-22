@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1D25E72E26816D36005750BD /* SFAlbumPickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D25E72D26816D36005750BD /* SFAlbumPickerViewController.swift */; };
 		1DEF9A532680295C00544D66 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DEF9A522680295C00544D66 /* AppDelegate.swift */; };
 		1DEF9A552680295C00544D66 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DEF9A542680295C00544D66 /* SceneDelegate.swift */; };
 		1DEF9A572680295C00544D66 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DEF9A562680295C00544D66 /* ViewController.swift */; };
@@ -16,7 +17,7 @@
 		1DEF9A6A2680295E00544D66 /* SFAlbumPickerDemoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DEF9A692680295E00544D66 /* SFAlbumPickerDemoTests.swift */; };
 		1DEF9A752680295E00544D66 /* SFAlbumPickerDemoUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DEF9A742680295E00544D66 /* SFAlbumPickerDemoUITests.swift */; };
 		1DEF9A8726802AB500544D66 /* SFAlbumPickerViewMediaModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DEF9A8326802AB500544D66 /* SFAlbumPickerViewMediaModel.swift */; };
-		1DEF9A8826802AB500544D66 /* SFAlbumPickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DEF9A8426802AB500544D66 /* SFAlbumPickerViewController.swift */; };
+		1DEF9A8826802AB500544D66 /* SFAlbumPickerRootViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DEF9A8426802AB500544D66 /* SFAlbumPickerRootViewController.swift */; };
 		1DEF9A8926802AB500544D66 /* SFAlbumPickerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DEF9A8526802AB500544D66 /* SFAlbumPickerViewModel.swift */; };
 		1DEF9A8A26802AB500544D66 /* SFAlbumPickerViewCollectionViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DEF9A8626802AB500544D66 /* SFAlbumPickerViewCollectionViewCell.swift */; };
 /* End PBXBuildFile section */
@@ -39,6 +40,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1D25E72D26816D36005750BD /* SFAlbumPickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFAlbumPickerViewController.swift; sourceTree = "<group>"; };
 		1DEF9A4F2680295C00544D66 /* SFAlbumPickerDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SFAlbumPickerDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1DEF9A522680295C00544D66 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		1DEF9A542680295C00544D66 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -54,7 +56,7 @@
 		1DEF9A742680295E00544D66 /* SFAlbumPickerDemoUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFAlbumPickerDemoUITests.swift; sourceTree = "<group>"; };
 		1DEF9A762680295E00544D66 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1DEF9A8326802AB500544D66 /* SFAlbumPickerViewMediaModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SFAlbumPickerViewMediaModel.swift; sourceTree = "<group>"; };
-		1DEF9A8426802AB500544D66 /* SFAlbumPickerViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SFAlbumPickerViewController.swift; sourceTree = "<group>"; };
+		1DEF9A8426802AB500544D66 /* SFAlbumPickerRootViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SFAlbumPickerRootViewController.swift; sourceTree = "<group>"; };
 		1DEF9A8526802AB500544D66 /* SFAlbumPickerViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SFAlbumPickerViewModel.swift; sourceTree = "<group>"; };
 		1DEF9A8626802AB500544D66 /* SFAlbumPickerViewCollectionViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SFAlbumPickerViewCollectionViewCell.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -141,9 +143,10 @@
 			isa = PBXGroup;
 			children = (
 				1DEF9A8626802AB500544D66 /* SFAlbumPickerViewCollectionViewCell.swift */,
-				1DEF9A8426802AB500544D66 /* SFAlbumPickerViewController.swift */,
+				1DEF9A8426802AB500544D66 /* SFAlbumPickerRootViewController.swift */,
 				1DEF9A8326802AB500544D66 /* SFAlbumPickerViewMediaModel.swift */,
 				1DEF9A8526802AB500544D66 /* SFAlbumPickerViewModel.swift */,
+				1D25E72D26816D36005750BD /* SFAlbumPickerViewController.swift */,
 			);
 			path = SFAlbumPicker;
 			sourceTree = "<group>";
@@ -279,8 +282,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				1DEF9A8A26802AB500544D66 /* SFAlbumPickerViewCollectionViewCell.swift in Sources */,
+				1D25E72E26816D36005750BD /* SFAlbumPickerViewController.swift in Sources */,
 				1DEF9A8926802AB500544D66 /* SFAlbumPickerViewModel.swift in Sources */,
-				1DEF9A8826802AB500544D66 /* SFAlbumPickerViewController.swift in Sources */,
+				1DEF9A8826802AB500544D66 /* SFAlbumPickerRootViewController.swift in Sources */,
 				1DEF9A572680295C00544D66 /* ViewController.swift in Sources */,
 				1DEF9A8726802AB500544D66 /* SFAlbumPickerViewMediaModel.swift in Sources */,
 				1DEF9A532680295C00544D66 /* AppDelegate.swift in Sources */,

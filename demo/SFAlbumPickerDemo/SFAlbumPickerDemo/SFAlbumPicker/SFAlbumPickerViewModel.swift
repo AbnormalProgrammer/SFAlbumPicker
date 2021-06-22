@@ -29,6 +29,7 @@ class SFAlbumPickerViewModel: NSObject {
         let status:SFAlbumPickerErrorType = self.requestAuthorization()
         if status == .NotAuthorized {
             self.loadCompleteClosure!(false,status)
+            return
         }
         DispatchQueue.global().async {
             let fetchOptions:PHFetchOptions = PHFetchOptions.init()
@@ -63,9 +64,10 @@ class SFAlbumPickerViewModel: NSObject {
     
     private func requestAuthorization() -> SFAlbumPickerErrorType {
         var result:SFAlbumPickerErrorType = .NotAuthorized
-        if PHPhotoLibrary.authorizationStatus() != .authorized {
+        let currentStatus:PHAuthorizationStatus = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+        if currentStatus != .authorized && currentStatus != .limited {
             PHPhotoLibrary.requestAuthorization(for: .readWrite) { (status) in
-                if status == .authorized {
+                if status == .authorized || status == .limited {
                     result = .NoError
                 }
             }
@@ -79,9 +81,13 @@ class SFAlbumPickerViewModel: NSObject {
     // MARK: - accessors
     internal var loadCompleteClosure:((Bool,SFAlbumPickerErrorType) -> Void)?
     internal let cellIdentifier:String = "LPLibraryViewCollectionViewCell"
+    internal var itemGap:CGFloat = 1/*每个展示图片之间的间隔距离*/
+    internal var itemNumberOfOneRow:Int = 4/*每行展示的缩略图的个数*/
+    internal var pickerBackgroundColor:UIColor = .white/*整个展示页面的背景颜色*/
+    internal var backItemTitle:String = "返回"/*返回按钮的标题*/
     internal var itemWidth:CGFloat {
         get {
-            return UIScreen.main.bounds.width / 4
+            return (UIScreen.main.bounds.width - CGFloat.init(itemNumberOfOneRow - 1) * itemGap) / CGFloat.init(itemNumberOfOneRow)
         }
     }
     internal var mediaModels:[SFAlbumPickerViewMediaModel] = [SFAlbumPickerViewMediaModel].init()
