@@ -79,12 +79,15 @@ class SFAlbumPickerViewModel: NSObject {
     // MARK: - public interfaces
     // MARK: - actions
     // MARK: - accessors
+    internal var selectionModelsForMax:[SFAlbumPickerViewMediaModel] = []/*用户设定的能够选择的最大数目*/
+    
     internal var loadCompleteClosure:((Bool,SFAlbumPickerErrorType) -> Void)?
     internal let cellIdentifier:String = "LPLibraryViewCollectionViewCell"
     internal var itemGap:CGFloat = 1/*每个展示图片之间的间隔距离*/
     internal var itemNumberOfOneRow:Int = 4/*每行展示的缩略图的个数*/
     internal var pickerBackgroundColor:UIColor = .white/*整个展示页面的背景颜色*/
     internal var backItemTitle:String = "返回"/*返回按钮的标题*/
+    internal var maxSelectionNumber:Int = -1/*用户允许选择的最大数目*/
     internal var itemWidth:CGFloat {
         get {
             return (UIScreen.main.bounds.width - CGFloat.init(itemNumberOfOneRow - 1) * itemGap) / CGFloat.init(itemNumberOfOneRow)
