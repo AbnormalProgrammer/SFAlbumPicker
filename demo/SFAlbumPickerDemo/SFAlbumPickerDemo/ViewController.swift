@@ -25,12 +25,10 @@ class ViewController: UIViewController,SFAlbumPickerViewControllerProtocol {
         }
     }
     
-    func SFAlbumPickerViewControllerFailureCallback(_ controller: SFAlbumPickerRootViewController?, _ type: SFAlbumPickerErrorType) {
-        print(type)
+    func SFAlbumPickerViewControllerCallbackAsset(_ controller: SFAlbumPickerViewController, _ assets: [PHAsset]) {
     }
     
-    func SFAlbumPickerViewControllerCallbackAsset(_ controller: SFAlbumPickerRootViewController, _ asset: PHAsset) {
-        print(asset)
+    func SFAlbumPickerViewControllerFailureCallback(_ controller: SFAlbumPickerViewController, _ type: SFAlbumPickerErrorType) {
     }
 }
 

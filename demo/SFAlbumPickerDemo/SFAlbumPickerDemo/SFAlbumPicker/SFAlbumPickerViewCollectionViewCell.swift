@@ -22,6 +22,22 @@ class SFAlbumPickerViewCollectionViewCell: UICollectionViewCell {
     deinit {
         print("\(type(of: self))释放了")
     }
+    
+    override var isSelected: Bool {
+        set {
+            super.isSelected = newValue
+            if newValue == true {
+                let selectedImage:UIImage? = UIImage.init(systemName: "checkmark.circle",withConfiguration: UIImage.SymbolConfiguration.init(pointSize: 30))? .withTintColor(.systemBlue)
+                self.selectButton.setImage(selectedImage, for: .normal)
+            } else {
+                let deselectedImage:UIImage? = UIImage.init(systemName: "circle",withConfiguration: UIImage.SymbolConfiguration.init(pointSize: 30))?.withTintColor(UIColor.systemBlue)
+                self.selectButton.setImage(deselectedImage, for: .normal)
+            }
+        }
+        get {
+            return super.isSelected
+        }
+    }
     // MARK: - custom methods
     func customInitilizer() -> Void {
         self.translatesAutoresizingMaskIntoConstraints = false
@@ -36,14 +52,13 @@ class SFAlbumPickerViewCollectionViewCell: UICollectionViewCell {
         NSLayoutConstraint.init(item: self.thumbnailImageView, attribute: .bottom, relatedBy: .equal, toItem: self.contentView, attribute: .bottom, multiplier: 1, constant: 0).isActive = true
         NSLayoutConstraint.init(item: self.thumbnailImageView, attribute: .trailing, relatedBy: .equal, toItem: self.contentView, attribute: .trailing, multiplier: 1, constant: 0).isActive = true
 
-        NSLayoutConstraint.init(item: self.selectButton, attribute: .width, relatedBy: .equal, toItem: self.selectButton, attribute: .height, multiplier: 1, constant: 0).isActive = true
-        NSLayoutConstraint.init(item: self.selectButton, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 0, constant: 20).isActive = true
+        NSLayoutConstraint.init(item: self.selectButton, attribute: .width, relatedBy: .equal, toItem: self.selectButton, attribute: .height, multiplier: 1, constant:0).isActive = true
+        NSLayoutConstraint.init(item: self.selectButton, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 0, constant: 40).isActive = true
+        NSLayoutConstraint.init(item: self.selectButton, attribute: .top, relatedBy: .equal, toItem: self.contentView, attribute: .top, multiplier: 1, constant: 0).isActive = true
+        NSLayoutConstraint.init(item: self.selectButton, attribute: .trailing, relatedBy: .equal, toItem: self.contentView, attribute: .trailing, multiplier: 1, constant: 0).isActive = true
     }
     // MARK: - public interfaces
     // MARK: - actions
-    @objc private func sureButtonAction(_ sender:UIButton) -> Void {
-        
-    }
     // MARK: - accessors
     internal var model:SFAlbumPickerViewMediaModel? {
         set {
@@ -56,10 +71,11 @@ class SFAlbumPickerViewCollectionViewCell: UICollectionViewCell {
     lazy private var selectButton:UIButton = {
         let result:UIButton = UIButton.init(type: .custom)
         result.translatesAutoresizingMaskIntoConstraints = false
-        result.setBackgroundImage(UIImage.init(named: "matchsuccess_close"), for: .normal)
+        let defaultImage:UIImage? = UIImage.init(systemName: "circle",withConfiguration: UIImage.SymbolConfiguration.init(pointSize: 30))?.withTintColor(UIColor.systemBlue)
+        result.setImage(defaultImage, for: .normal)
+        result.isUserInteractionEnabled = false
         result.contentMode = .scaleToFill
         result.adjustsImageWhenHighlighted = false
-        result.addTarget(self, action: #selector(sureButtonAction(_:)), for: UIControl.Event.init(rawValue: UIControl.Event.touchUpInside.rawValue | UIControl.Event.touchUpOutside.rawValue))
         return result
     }()
     lazy private var thumbnailImageView:UIImageView = {

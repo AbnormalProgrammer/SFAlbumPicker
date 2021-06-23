@@ -43,13 +43,12 @@ class SFAlbumPickerViewController: UINavigationController {
     
     private func installUI() -> Void {
     }
-    
+    // MARK: - public interfaces
     internal static func create() -> SFAlbumPickerViewController {
         let rootController:SFAlbumPickerRootViewController = SFAlbumPickerRootViewController.init()
         let controller:SFAlbumPickerViewController = SFAlbumPickerViewController.init(rootViewController: rootController)
         return controller
     }
-    // MARK: - public interfaces
     // MARK: - actions
     // MARK: - accessors
     weak private var rootController:SFAlbumPickerRootViewController?

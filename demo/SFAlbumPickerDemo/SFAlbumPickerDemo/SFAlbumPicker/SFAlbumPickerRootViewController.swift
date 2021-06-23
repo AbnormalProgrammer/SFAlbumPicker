@@ -14,8 +14,8 @@ internal enum SFAlbumPickerErrorType {
 }
 
 protocol SFAlbumPickerViewControllerProtocol:NSObjectProtocol {
-    func SFAlbumPickerViewControllerFailureCallback(_ controller:SFAlbumPickerRootViewController?,_ type:SFAlbumPickerErrorType) -> Void
-    func SFAlbumPickerViewControllerCallbackAsset(_ controller:SFAlbumPickerRootViewController,_ asset:PHAsset) -> Void
+    func SFAlbumPickerViewControllerFailureCallback(_ controller:SFAlbumPickerViewController,_ type:SFAlbumPickerErrorType) -> Void
+    func SFAlbumPickerViewControllerCallbackAsset(_ controller:SFAlbumPickerViewController,_ assets:[PHAsset]) -> Void
 }
 
 class SFAlbumPickerRootViewController: UIViewController,UICollectionViewDelegate,UICollectionViewDataSource,UICollectionViewDelegateFlowLayout {
@@ -42,6 +42,7 @@ class SFAlbumPickerRootViewController: UIViewController,UICollectionViewDelegate
     // MARK: - custom methods
     private func customInitilizer() -> Void {
         self.navigationItem.leftBarButtonItem = self.leftItem
+        self.navigationItem.rightBarButtonItem = self.rightItem
     }
     
     private func installUI() -> Void {
@@ -57,7 +58,7 @@ class SFAlbumPickerRootViewController: UIViewController,UICollectionViewDelegate
                 if success == true {
                     self?.mediaCollectionView.reloadData()
                 } else {
-                    self?.delegate?.SFAlbumPickerViewControllerFailureCallback(self, errorType)
+                    self?.delegate?.SFAlbumPickerViewControllerFailureCallback(self?.navigationController as! SFAlbumPickerViewController, errorType)
                 }
             }
         }
@@ -67,6 +68,13 @@ class SFAlbumPickerRootViewController: UIViewController,UICollectionViewDelegate
     // MARK: - actions
     @objc private func leftItemAction(_ sender:UIBarButtonItem) -> Void {
         self.navigationController?.dismiss(animated: true, completion: {
+        })
+    }
+    
+    @objc private func rightItemAction(_ sender:UIBarButtonItem) -> Void {
+        self.navigationController?.dismiss(animated: true, completion: {
+            let assets:[PHAsset] = self.viewModel.requestSelectedAssets(self.mediaCollectionView.indexPathsForSelectedItems ?? [])
+            self.delegate?.SFAlbumPickerViewControllerCallbackAsset(self.navigationController  as! SFAlbumPickerViewController, assets)
         })
     }
     // MARK: - accessors
@@ -81,6 +89,7 @@ class SFAlbumPickerRootViewController: UIViewController,UICollectionViewDelegate
         result.translatesAutoresizingMaskIntoConstraints = false
         result.delegate = self
         result.dataSource = self
+        result.allowsMultipleSelection = true
         result.register(SFAlbumPickerViewCollectionViewCell.self, forCellWithReuseIdentifier: self.viewModel.cellIdentifier)
         return result
     }()
@@ -89,6 +98,13 @@ class SFAlbumPickerRootViewController: UIViewController,UICollectionViewDelegate
         result.style = .plain
         result.target = self
         result.action = #selector(leftItemAction(_:))
+        return result
+    }()
+    lazy private var rightItem:UIBarButtonItem = {
+        let result:UIBarButtonItem = UIBarButtonItem.init(systemItem: .add)
+        result.style = .plain
+        result.target = self
+        result.action = #selector(rightItemAction(_:))
         return result
     }()
     // MARK: - delegates
@@ -106,11 +122,17 @@ class SFAlbumPickerRootViewController: UIViewController,UICollectionViewDelegate
         return self.viewModel.mediaModels.count
     }
     
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        switch indexPath.item {
-        default:
-            self.delegate?.SFAlbumPickerViewControllerCallbackAsset(self, self.viewModel.mediaModels[indexPath.item].asset!)
+    func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
+        guard self.viewModel.isNoLimit == false else {
+            return true
         }
+        guard collectionView.indexPathsForSelectedItems != nil else {
+            return true
+        }
+        guard collectionView.indexPathsForSelectedItems!.count < self.viewModel.maxSelectionNumber else {
+            return false
+        }
+        return true
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
