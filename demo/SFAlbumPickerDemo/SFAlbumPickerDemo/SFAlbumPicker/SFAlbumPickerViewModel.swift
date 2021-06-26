@@ -8,7 +8,17 @@
 import UIKit
 import Photos
 
-class SFAlbumPickerViewModel: NSObject {
+protocol SFAlbumPickerViewModelProtocol:NSObjectProtocol {
+    func SFAlbumPickerViewModelBeginFetch(_ viewModel:SFAlbumPickerViewModel) -> Void
+    func SFAlbumPickerViewModelFinishFetch(_ viewModel:SFAlbumPickerViewModel,_ success:Bool,_ errorType:SFAlbumPickerErrorType) -> Void
+    func SFAlbumPickerViewModelShouldRefetch(_ viewModel:SFAlbumPickerViewModel) -> Void
+}
+
+/*
+ 这里面主要用来处理数据和业务逻辑
+ 不应该有UI参与
+ */
+class SFAlbumPickerViewModel: NSObject,PHPhotoLibraryChangeObserver {
     // MARK: - lifecycle
     deinit {
         print("\(type(of: self))释放了")
@@ -20,21 +30,24 @@ class SFAlbumPickerViewModel: NSObject {
     }
     // MARK: - custom methods
     private func customInitilizer() -> Void {
+        PHPhotoLibrary.shared().register(self)
     }
     
     /*
      加载相册中所有的照片资源
      */
     internal func loadAllPhotos() -> Void {
+        self.delegate?.SFAlbumPickerViewModelBeginFetch(self)
         let status:SFAlbumPickerErrorType = self.requestAuthorization()
         if status == .NotAuthorized {
-            self.loadCompleteClosure!(false,status)
+            self.delegate?.SFAlbumPickerViewModelFinishFetch(self, true, .NotAuthorized)
             return
         }
         DispatchQueue.global().async {
             let fetchOptions:PHFetchOptions = PHFetchOptions.init()
             fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: true)]
             let fetchResult:PHFetchResult<PHAsset> = PHAsset.fetchAssets(with: fetchOptions)
+            self.currentFetchResult = fetchResult
             var assets:[PHAsset] = [PHAsset].init()
             fetchResult.enumerateObjects { (asset, index, stop) in
                 assets.append(asset)
@@ -55,10 +68,7 @@ class SFAlbumPickerViewModel: NSObject {
                     }
                 }
             }
-            guard self.loadCompleteClosure != nil else {
-                return
-            }
-            self.loadCompleteClosure!(true,status)
+            self.delegate?.SFAlbumPickerViewModelFinishFetch(self, true, .NoError)
         }
     }
     
@@ -89,7 +99,10 @@ class SFAlbumPickerViewModel: NSObject {
     }
     // MARK: - actions
     // MARK: - accessors
-    internal var loadCompleteClosure:((Bool,SFAlbumPickerErrorType) -> Void)?
+    weak internal var delegate:SFAlbumPickerViewModelProtocol?
+    
+    private var currentFetchResult:PHFetchResult<PHAsset>?
+    
     internal let cellIdentifier:String = "LPLibraryViewCollectionViewCell"
     internal var itemGap:CGFloat = 1/*每个展示图片之间的间隔距离*/
     internal var itemNumberOfOneRow:Int = 4/*每行展示的缩略图的个数*/
@@ -102,9 +115,14 @@ class SFAlbumPickerViewModel: NSObject {
     }
     internal var isNoLimit:Bool {
         get {
-            return self.maxSelectionNumber == 0
+            return self.maxSelectionNumber <= 0
         }
     }/*是否没有限制*/
     internal var mediaModels:[SFAlbumPickerViewMediaModel] = [SFAlbumPickerViewMediaModel].init()
     // MARK: - delegates
+    /// 发生了变化就重新fetch
+    /// - Parameter changeInstance: 变化的信息
+    func photoLibraryDidChange(_ changeInstance: PHChange) {
+        self.delegate?.SFAlbumPickerViewModelShouldRefetch(self)
+    }
 }

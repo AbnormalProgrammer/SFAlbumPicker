@@ -49,6 +49,13 @@ class SFAlbumPickerViewController: UINavigationController {
         let controller:SFAlbumPickerViewController = SFAlbumPickerViewController.init(rootViewController: rootController)
         return controller
     }
+    
+    internal func inputSettings(_ settingClosure:@escaping((SFAlbumPickerViewControllerSettingsModel) -> Void)) -> Void {
+        guard self.rootController != nil else {
+            return
+        }
+        self.rootController!.inputSettings(settingClosure)
+    }
     // MARK: - actions
     // MARK: - accessors
     weak private var rootController:SFAlbumPickerRootViewController?

@@ -68,6 +68,7 @@ class SFAlbumPickerViewCollectionViewCell: UICollectionViewCell {
             return nil
         }
     }
+    
     lazy private var selectButton:UIButton = {
         let result:UIButton = UIButton.init(type: .custom)
         result.translatesAutoresizingMaskIntoConstraints = false

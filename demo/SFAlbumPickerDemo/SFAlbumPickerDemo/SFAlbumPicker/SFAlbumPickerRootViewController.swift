@@ -16,9 +16,19 @@ internal enum SFAlbumPickerErrorType {
 protocol SFAlbumPickerViewControllerProtocol:NSObjectProtocol {
     func SFAlbumPickerViewControllerFailureCallback(_ controller:SFAlbumPickerViewController,_ type:SFAlbumPickerErrorType) -> Void
     func SFAlbumPickerViewControllerCallbackAsset(_ controller:SFAlbumPickerViewController,_ assets:[PHAsset]) -> Void
+    
+    /// 是否需要自定义抓取的过程
+    /// 调用此方法可实现动态配置是否使用该相册
+    /// 如果返回真，相册不会回调任何数据
+    /// - Parameter controller: 是否自定义
+    func SFAlbumPickerViewControllerShouldCustomFetch(_ controller:SFAlbumPickerViewController) -> Bool
 }
 
-class SFAlbumPickerRootViewController: UIViewController,UICollectionViewDelegate,UICollectionViewDataSource,UICollectionViewDelegateFlowLayout {
+/*
+ 这个地方主要是表现层
+ 数据的处理不应该发生在这里
+ */
+class SFAlbumPickerRootViewController: UIViewController,UICollectionViewDelegate,UICollectionViewDataSource,UICollectionViewDelegateFlowLayout,SFAlbumPickerViewModelProtocol {
     // MARK: - lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -43,28 +53,37 @@ class SFAlbumPickerRootViewController: UIViewController,UICollectionViewDelegate
     private func customInitilizer() -> Void {
         self.navigationItem.leftBarButtonItem = self.leftItem
         self.navigationItem.rightBarButtonItem = self.rightItem
+        self.viewModel.delegate = self
     }
     
     private func installUI() -> Void {
         self.view.addSubview(self.mediaCollectionView)
+        self.view.addSubview(self.noLabel)
+        self.navigationController?.view.addSubview(self.loadingControl)
         
         NSLayoutConstraint.init(item: self.mediaCollectionView, attribute: .top, relatedBy: .equal, toItem: self.view, attribute: .topMargin, multiplier: 1, constant: 0).isActive = true
         NSLayoutConstraint.init(item: self.mediaCollectionView, attribute: .leading, relatedBy: .equal, toItem: self.view, attribute: .leading, multiplier: 1, constant: 0).isActive = true
         NSLayoutConstraint.init(item: self.mediaCollectionView, attribute: .trailing, relatedBy: .equal, toItem: self.view, attribute: .trailing, multiplier: 1, constant: 0).isActive = true
         NSLayoutConstraint.init(item: self.mediaCollectionView, attribute: .bottom, relatedBy: .equal, toItem: self.view, attribute: .bottomMargin, multiplier: 1, constant: 0).isActive = true
+        NSLayoutConstraint.init(item: self.noLabel, attribute: .centerX, relatedBy: .equal, toItem: self.view, attribute: .centerX, multiplier: 1, constant: 0).isActive = true
+        NSLayoutConstraint.init(item: self.noLabel, attribute: .centerY, relatedBy: .equal, toItem: self.view, attribute: .centerY, multiplier: 1, constant: 0).isActive = true
 
-        self.viewModel.loadCompleteClosure = { [weak self](success,errorType) in
-            DispatchQueue.main.async {
-                if success == true {
-                    self?.mediaCollectionView.reloadData()
-                } else {
-                    self?.delegate?.SFAlbumPickerViewControllerFailureCallback(self?.navigationController as! SFAlbumPickerViewController, errorType)
-                }
-            }
+        self.controlLoadProcess()
+    }
+    
+    private func controlLoadProcess() -> Void {
+        if self.delegate?.SFAlbumPickerViewControllerShouldCustomFetch(self.navigationController  as! SFAlbumPickerViewController) == false {
+            self.viewModel.loadAllPhotos()
         }
-        self.viewModel.loadAllPhotos()
     }
     // MARK: - public interfaces
+    internal func inputSettings(_ settingClosure:@escaping((SFAlbumPickerViewControllerSettingsModel) -> Void)) -> Void {
+        let settingModel:SFAlbumPickerViewControllerSettingsModel = SFAlbumPickerViewControllerSettingsModel.init()
+        settingClosure(settingModel)
+        if settingModel.maxSelectionNumber != nil {
+            self.viewModel.maxSelectionNumber = settingModel.maxSelectionNumber!
+        }
+    }
     // MARK: - actions
     @objc private func leftItemAction(_ sender:UIBarButtonItem) -> Void {
         self.navigationController?.dismiss(animated: true, completion: {
@@ -101,11 +120,29 @@ class SFAlbumPickerRootViewController: UIViewController,UICollectionViewDelegate
         return result
     }()
     lazy private var rightItem:UIBarButtonItem = {
-        let result:UIBarButtonItem = UIBarButtonItem.init(systemItem: .add)
+        let result:UIBarButtonItem = UIBarButtonItem.init(systemItem: .done)
         result.style = .plain
         result.target = self
         result.action = #selector(rightItemAction(_:))
         return result
+    }()
+    lazy private var loadingControl:UIActivityIndicatorView = {
+        let result:UIActivityIndicatorView = UIActivityIndicatorView.init()
+        result.translatesAutoresizingMaskIntoConstraints = false
+        result.color = .systemBlue
+        result.hidesWhenStopped = true
+        result.style = .large
+        result.stopAnimating()
+        return result
+    }()
+    lazy private var noLabel:UILabel = {
+        let promotionLabel:UILabel = UILabel.init()
+        promotionLabel.translatesAutoresizingMaskIntoConstraints = false
+        promotionLabel.font = UIFont.systemFont(ofSize: 30)
+        promotionLabel.text = "没有媒体"
+        promotionLabel.textColor = .black
+        promotionLabel.isHidden = false
+        return promotionLabel
     }()
     // MARK: - delegates
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -137,5 +174,25 @@ class SFAlbumPickerRootViewController: UIViewController,UICollectionViewDelegate
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         return CGSize.init(width: self.viewModel.itemWidth, height: self.viewModel.itemWidth)
+    }
+    
+    func SFAlbumPickerViewModelBeginFetch(_ viewModel: SFAlbumPickerViewModel) {
+        self.loadingControl.startAnimating()
+    }
+    
+    func SFAlbumPickerViewModelFinishFetch(_ viewModel: SFAlbumPickerViewModel, _ success: Bool, _ errorType: SFAlbumPickerErrorType) {
+        DispatchQueue.main.async {
+            if success == true {
+                self.mediaCollectionView.reloadData()
+            } else {
+                self.delegate?.SFAlbumPickerViewControllerFailureCallback(self.navigationController as! SFAlbumPickerViewController, errorType)
+            }
+            self.noLabel.isHidden = self.viewModel.mediaModels.count != 0
+            self.loadingControl.stopAnimating()
+        }
+    }
+    
+    func SFAlbumPickerViewModelShouldRefetch(_ viewModel: SFAlbumPickerViewModel) {
+        self.controlLoadProcess()
     }
 }
