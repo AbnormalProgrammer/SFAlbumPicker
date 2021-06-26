@@ -11,7 +11,7 @@ import Photos
 protocol SFAlbumPickerViewModelProtocol:NSObjectProtocol {
     func SFAlbumPickerViewModelBeginFetch(_ viewModel:SFAlbumPickerViewModel) -> Void
     func SFAlbumPickerViewModelFinishFetch(_ viewModel:SFAlbumPickerViewModel,_ success:Bool,_ errorType:SFAlbumPickerErrorType) -> Void
-    func SFAlbumPickerViewModelShouldRefetch(_ viewModel:SFAlbumPickerViewModel) -> Void
+    func SFAlbumPickerViewModelRefetch(_ viewModel:SFAlbumPickerViewModel) -> Void
 }
 
 /*
@@ -33,6 +33,21 @@ class SFAlbumPickerViewModel: NSObject,PHPhotoLibraryChangeObserver {
         PHPhotoLibrary.shared().register(self)
     }
     
+    private func requestAuthorization() -> SFAlbumPickerErrorType {
+        var result:SFAlbumPickerErrorType = .NotAuthorized
+        let currentStatus:PHAuthorizationStatus = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+        if currentStatus != .authorized && currentStatus != .limited {
+            PHPhotoLibrary.requestAuthorization(for: .readWrite) { (status) in
+                if status == .authorized || status == .limited {
+                    result = .NoError
+                }
+            }
+        } else {
+            result = .NoError
+        }
+        return result
+    }
+    // MARK: - public interfaces
     /*
      加载相册中所有的照片资源
      */
@@ -52,14 +67,9 @@ class SFAlbumPickerViewModel: NSObject,PHPhotoLibraryChangeObserver {
             fetchResult.enumerateObjects { (asset, index, stop) in
                 assets.append(asset)
             }
-            let requestOption:PHImageRequestOptions = PHImageRequestOptions.init()
-            requestOption.deliveryMode = .highQualityFormat
-            requestOption.isSynchronous = true
-            requestOption.resizeMode = .fast
-            requestOption.isNetworkAccessAllowed = false
             self.mediaModels = []
             for iterator in assets {
-                PHCachingImageManager.default().requestImage(for: iterator, targetSize: CGSize.init(width: self.itemWidth, height: self.itemWidth), contentMode: .aspectFit, options: requestOption) { (image, info) in
+                PHCachingImageManager.default().requestImage(for: iterator, targetSize: CGSize.init(width: self.itemWidth, height: self.itemWidth), contentMode: .aspectFit, options: self.requestOption) { (image, info) in
                     if image != nil {
                         let newModel:SFAlbumPickerViewMediaModel = SFAlbumPickerViewMediaModel.init()
                         newModel.asset = iterator
@@ -71,22 +81,23 @@ class SFAlbumPickerViewModel: NSObject,PHPhotoLibraryChangeObserver {
             self.delegate?.SFAlbumPickerViewModelFinishFetch(self, true, .NoError)
         }
     }
-    
-    private func requestAuthorization() -> SFAlbumPickerErrorType {
-        var result:SFAlbumPickerErrorType = .NotAuthorized
-        let currentStatus:PHAuthorizationStatus = PHPhotoLibrary.authorizationStatus(for: .readWrite)
-        if currentStatus != .authorized && currentStatus != .limited {
-            PHPhotoLibrary.requestAuthorization(for: .readWrite) { (status) in
-                if status == .authorized || status == .limited {
-                    result = .NoError
+    /// 输入从外部输入进来的相册数据
+    /// - Parameter assets: 外部数据
+    /// - Returns: 空
+    internal func inputDataFromOutside(_ assets:[PHAsset]) -> Void {
+        self.mediaModels = []
+        for iterator in assets {
+            PHCachingImageManager.default().requestImage(for: iterator, targetSize: CGSize.init(width: self.itemWidth, height: self.itemWidth), contentMode: .aspectFit, options: self.requestOption) { (image, info) in
+                if image != nil {
+                    let newModel:SFAlbumPickerViewMediaModel = SFAlbumPickerViewMediaModel.init()
+                    newModel.asset = iterator
+                    newModel.thumbnailImage = image
+                    self.mediaModels.append(newModel)
                 }
             }
-        } else {
-            result = .NoError
         }
-        return result
+        self.delegate?.SFAlbumPickerViewModelFinishFetch(self, true, .NoError)
     }
-    // MARK: - public interfaces
     /// 请求已经选中的数据
     /// - Parameter indexPaths: 选中的索引
     /// - Returns: 相册数据资源
@@ -102,6 +113,14 @@ class SFAlbumPickerViewModel: NSObject,PHPhotoLibraryChangeObserver {
     weak internal var delegate:SFAlbumPickerViewModelProtocol?
     
     private var currentFetchResult:PHFetchResult<PHAsset>?
+    lazy private var requestOption:PHImageRequestOptions = {
+        let requestOption:PHImageRequestOptions = PHImageRequestOptions.init()
+        requestOption.deliveryMode = .highQualityFormat
+        requestOption.isSynchronous = true
+        requestOption.resizeMode = .fast
+        requestOption.isNetworkAccessAllowed = false
+        return requestOption
+    }()
     
     internal let cellIdentifier:String = "LPLibraryViewCollectionViewCell"
     internal var itemGap:CGFloat = 1/*每个展示图片之间的间隔距离*/
@@ -123,6 +142,6 @@ class SFAlbumPickerViewModel: NSObject,PHPhotoLibraryChangeObserver {
     /// 发生了变化就重新fetch
     /// - Parameter changeInstance: 变化的信息
     func photoLibraryDidChange(_ changeInstance: PHChange) {
-        self.delegate?.SFAlbumPickerViewModelShouldRefetch(self)
+        self.delegate?.SFAlbumPickerViewModelRefetch(self)
     }
 }

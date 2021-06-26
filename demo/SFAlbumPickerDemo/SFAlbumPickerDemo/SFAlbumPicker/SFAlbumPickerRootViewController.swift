@@ -22,13 +22,17 @@ protocol SFAlbumPickerViewControllerProtocol:NSObjectProtocol {
     /// 如果返回真，相册不会回调任何数据
     /// - Parameter controller: 是否自定义
     func SFAlbumPickerViewControllerShouldCustomFetch(_ controller:SFAlbumPickerViewController) -> Bool
+    
+    /// 从外部输入数据以供显示
+    /// - Parameter controller: 控制器
+    func SFAlbumPickerViewControllerInputCustomAssets(_ controller:SFAlbumPickerViewController) -> [PHAsset]
 }
 
 /*
  这个地方主要是表现层
  数据的处理不应该发生在这里
  */
-class SFAlbumPickerRootViewController: UIViewController,UICollectionViewDelegate,UICollectionViewDataSource,UICollectionViewDelegateFlowLayout,SFAlbumPickerViewModelProtocol {
+class SFAlbumPickerRootViewController: UIViewController,UICollectionViewDelegate,UICollectionViewDataSource,UICollectionViewDelegateFlowLayout,SFAlbumPickerViewModelProtocol,UITableViewDelegate,UITableViewDataSource {
     // MARK: - lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -53,6 +57,7 @@ class SFAlbumPickerRootViewController: UIViewController,UICollectionViewDelegate
     private func customInitilizer() -> Void {
         self.navigationItem.leftBarButtonItem = self.leftItem
         self.navigationItem.rightBarButtonItem = self.rightItem
+        self.navigationItem.titleView = self.titleButton
         self.viewModel.delegate = self
     }
     
@@ -74,6 +79,8 @@ class SFAlbumPickerRootViewController: UIViewController,UICollectionViewDelegate
     private func controlLoadProcess() -> Void {
         if self.delegate?.SFAlbumPickerViewControllerShouldCustomFetch(self.navigationController  as! SFAlbumPickerViewController) == false {
             self.viewModel.loadAllPhotos()
+        } else {
+            self.viewModel.inputDataFromOutside(self.delegate?.SFAlbumPickerViewControllerInputCustomAssets(self.navigationController  as! SFAlbumPickerViewController) ?? [])
         }
     }
     // MARK: - public interfaces
@@ -96,9 +103,30 @@ class SFAlbumPickerRootViewController: UIViewController,UICollectionViewDelegate
             self.delegate?.SFAlbumPickerViewControllerCallbackAsset(self.navigationController  as! SFAlbumPickerViewController, assets)
         })
     }
+    
+    @objc private func titleButtonAction(_ sender:UIButton) -> Void {
+        print(#function)
+    }
     // MARK: - accessors
     internal var delegate:SFAlbumPickerViewControllerProtocol?
     private let viewModel:SFAlbumPickerViewModel = SFAlbumPickerViewModel.init()
+    lazy private var titleButton:UIButton = {
+        let result:UIButton = UIButton.init(type: .custom)
+        result.setTitle("各个相册", for: .normal)
+        result.addTarget(self, action: #selector(titleButtonAction(_:)), for: .touchUpInside)
+        return result
+    }()
+    lazy private var albumListTableView:UITableView = {
+        let result:UITableView = UITableView.init(frame: CGRect.zero, style: .plain)
+        let noHeightView:UIView = UIView.init(frame: CGRect.init(origin: CGPoint.zero, size: CGSize.init(width: 0, height: 0.01)))
+        result.tableHeaderView = noHeightView
+        result.tableFooterView = noHeightView
+        result.delegate = self
+        result.showsHorizontalScrollIndicator = false
+        result.showsVerticalScrollIndicator = false
+        result.dataSource = self
+        return result
+    }()
     lazy private var mediaCollectionView:UICollectionView = {
         let layout:UICollectionViewFlowLayout = UICollectionViewFlowLayout.init()
         layout.minimumInteritemSpacing = self.viewModel.itemGap
@@ -192,7 +220,7 @@ class SFAlbumPickerRootViewController: UIViewController,UICollectionViewDelegate
         }
     }
     
-    func SFAlbumPickerViewModelShouldRefetch(_ viewModel: SFAlbumPickerViewModel) {
+    func SFAlbumPickerViewModelRefetch(_ viewModel: SFAlbumPickerViewModel) {
         self.controlLoadProcess()
     }
 }

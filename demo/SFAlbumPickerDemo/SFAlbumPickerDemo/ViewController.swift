@@ -9,7 +9,6 @@ import UIKit
 import Photos
 
 class ViewController: UIViewController,SFAlbumPickerViewControllerProtocol {
-
     override func viewDidLoad() {
         super.viewDidLoad()
         self.view.backgroundColor = .systemBlue
@@ -43,7 +42,11 @@ class ViewController: UIViewController,SFAlbumPickerViewControllerProtocol {
     }
     
     func SFAlbumPickerViewControllerShouldCustomFetch(_ controller: SFAlbumPickerViewController) -> Bool {
-        return false
+        return true
+    }
+    
+    func SFAlbumPickerViewControllerInputCustomAssets(_ controller: SFAlbumPickerViewController) -> [PHAsset] {
+        return []
     }
 }
 
