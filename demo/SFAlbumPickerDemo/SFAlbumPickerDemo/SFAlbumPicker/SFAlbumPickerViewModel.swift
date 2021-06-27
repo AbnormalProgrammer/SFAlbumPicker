@@ -12,6 +12,7 @@ protocol SFAlbumPickerViewModelProtocol:NSObjectProtocol {
     func SFAlbumPickerViewModelBeginFetch(_ viewModel:SFAlbumPickerViewModel) -> Void
     func SFAlbumPickerViewModelFinishFetch(_ viewModel:SFAlbumPickerViewModel,_ success:Bool,_ errorType:SFAlbumPickerErrorType) -> Void
     func SFAlbumPickerViewModelRefetch(_ viewModel:SFAlbumPickerViewModel) -> Void
+    func SFAlbumPickerViewModelEndFetchCollections(_ viewModel:SFAlbumPickerViewModel,_ success:Bool,_ errorType:SFAlbumPickerErrorType) -> Void
 }
 
 /*
@@ -59,9 +60,7 @@ class SFAlbumPickerViewModel: NSObject,PHPhotoLibraryChangeObserver {
             return
         }
         DispatchQueue.global().async {
-            let fetchOptions:PHFetchOptions = PHFetchOptions.init()
-            fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: true)]
-            let fetchResult:PHFetchResult<PHAsset> = PHAsset.fetchAssets(with: fetchOptions)
+            let fetchResult:PHFetchResult<PHAsset> = PHAsset.fetchAssets(with: self.fetchOptions)
             self.currentFetchResult = fetchResult
             var assets:[PHAsset] = [PHAsset].init()
             fetchResult.enumerateObjects { (asset, index, stop) in
@@ -108,11 +107,28 @@ class SFAlbumPickerViewModel: NSObject,PHPhotoLibraryChangeObserver {
         }
         return result
     }
+    
+    /*
+     加载相册APP中的所有相册
+     
+     */
+    internal func loadAllAlbums() -> Void {
+        let collections:PHFetchResult<PHCollectionList> = PHCollectionList.fetchCollectionLists(with: .folder, subtype: .any, options: self.fetchOption)
+        let collectionItem:ph
+        for <#item#> in <#items#> {
+            <#code#>
+        }
+    }
     // MARK: - actions
     // MARK: - accessors
     weak internal var delegate:SFAlbumPickerViewModelProtocol?
     
     private var currentFetchResult:PHFetchResult<PHAsset>?
+    lazy private var fetchOption:PHFetchOptions = {
+        let fetchOptions:PHFetchOptions = PHFetchOptions.init()
+        fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: true)]
+        return fetchOptions
+    }()
     lazy private var requestOption:PHImageRequestOptions = {
         let requestOption:PHImageRequestOptions = PHImageRequestOptions.init()
         requestOption.deliveryMode = .highQualityFormat
@@ -122,7 +138,9 @@ class SFAlbumPickerViewModel: NSObject,PHPhotoLibraryChangeObserver {
         return requestOption
     }()
     
-    internal let cellIdentifier:String = "LPLibraryViewCollectionViewCell"
+    internal let itemIdentifier:String = "LPLibraryViewCollectionViewCell"
+    internal let ablumCellIdentifier:String = "SFAlbumPickerCollectionTableViewCell"
+    internal let ablumCellHeight:CGFloat = 100//相册单元格的高度
     internal var itemGap:CGFloat = 1/*每个展示图片之间的间隔距离*/
     internal var itemNumberOfOneRow:Int = 4/*每行展示的缩略图的个数*/
     internal var pickerBackgroundColor:UIColor = .white/*整个展示页面的背景颜色*/

@@ -83,6 +83,18 @@ class SFAlbumPickerRootViewController: UIViewController,UICollectionViewDelegate
             self.viewModel.inputDataFromOutside(self.delegate?.SFAlbumPickerViewControllerInputCustomAssets(self.navigationController  as! SFAlbumPickerViewController) ?? [])
         }
     }
+    
+    private func beginLoadingAnimation() -> Void {
+        self.view.isUserInteractionEnabled = false
+        self.navigationItem.leftBarButtonItem?.isEnabled = false
+        self.loadingControl.startAnimating()
+    }
+    
+    private func endLoadingAnimation() -> Void {
+        self.loadingControl.stopAnimating()
+        self.view.isUserInteractionEnabled = true
+        self.navigationItem.leftBarButtonItem?.isEnabled = true
+    }
     // MARK: - public interfaces
     internal func inputSettings(_ settingClosure:@escaping((SFAlbumPickerViewControllerSettingsModel) -> Void)) -> Void {
         let settingModel:SFAlbumPickerViewControllerSettingsModel = SFAlbumPickerViewControllerSettingsModel.init()
@@ -105,7 +117,8 @@ class SFAlbumPickerRootViewController: UIViewController,UICollectionViewDelegate
     }
     
     @objc private func titleButtonAction(_ sender:UIButton) -> Void {
-        print(#function)
+        self.beginLoadingAnimation()
+        
     }
     // MARK: - accessors
     internal var delegate:SFAlbumPickerViewControllerProtocol?
@@ -125,6 +138,7 @@ class SFAlbumPickerRootViewController: UIViewController,UICollectionViewDelegate
         result.showsHorizontalScrollIndicator = false
         result.showsVerticalScrollIndicator = false
         result.dataSource = self
+        result.register(SFAlbumPickerCollectionTableViewCell.self, forCellReuseIdentifier: self.viewModel.ablumCellIdentifier)
         return result
     }()
     lazy private var mediaCollectionView:UICollectionView = {
@@ -137,7 +151,7 @@ class SFAlbumPickerRootViewController: UIViewController,UICollectionViewDelegate
         result.delegate = self
         result.dataSource = self
         result.allowsMultipleSelection = true
-        result.register(SFAlbumPickerViewCollectionViewCell.self, forCellWithReuseIdentifier: self.viewModel.cellIdentifier)
+        result.register(SFAlbumPickerViewCollectionViewCell.self, forCellWithReuseIdentifier: self.viewModel.itemIdentifier)
         return result
     }()
     lazy private var leftItem:UIBarButtonItem = {
@@ -174,7 +188,7 @@ class SFAlbumPickerRootViewController: UIViewController,UICollectionViewDelegate
     }()
     // MARK: - delegates
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let result:SFAlbumPickerViewCollectionViewCell = collectionView.dequeueReusableCell(withReuseIdentifier: self.viewModel.cellIdentifier, for: indexPath) as! SFAlbumPickerViewCollectionViewCell
+        let result:SFAlbumPickerViewCollectionViewCell = collectionView.dequeueReusableCell(withReuseIdentifier: self.viewModel.itemIdentifier, for: indexPath) as! SFAlbumPickerViewCollectionViewCell
         result.model = self.viewModel.mediaModels[indexPath.item]
         return result
     }
@@ -204,8 +218,23 @@ class SFAlbumPickerRootViewController: UIViewController,UICollectionViewDelegate
         return CGSize.init(width: self.viewModel.itemWidth, height: self.viewModel.itemWidth)
     }
     
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let result:SFAlbumPickerCollectionTableViewCell = tableView.dequeueReusableCell(withIdentifier: self.viewModel.ablumCellIdentifier, for: indexPath) as
+        return result
+    }
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    }
+    
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return self.viewModel.ablumCellHeight
+    }
+    
     func SFAlbumPickerViewModelBeginFetch(_ viewModel: SFAlbumPickerViewModel) {
-        self.loadingControl.startAnimating()
+        self.beginLoadingAnimation()
     }
     
     func SFAlbumPickerViewModelFinishFetch(_ viewModel: SFAlbumPickerViewModel, _ success: Bool, _ errorType: SFAlbumPickerErrorType) {
@@ -216,7 +245,7 @@ class SFAlbumPickerRootViewController: UIViewController,UICollectionViewDelegate
                 self.delegate?.SFAlbumPickerViewControllerFailureCallback(self.navigationController as! SFAlbumPickerViewController, errorType)
             }
             self.noLabel.isHidden = self.viewModel.mediaModels.count != 0
-            self.loadingControl.stopAnimating()
+            self.endLoadingAnimation()
         }
     }
     
