@@ -64,15 +64,19 @@ class SFAlbumPickerRootViewController: UIViewController,UICollectionViewDelegate
     private func installUI() -> Void {
         self.view.addSubview(self.mediaCollectionView)
         self.view.addSubview(self.noLabel)
+        self.view.addSubview(self.albumListTableView)
         self.navigationController?.view.addSubview(self.loadingControl)
         
+        NSLayoutConstraint.init(item: self.loadingControl, attribute: .centerX, relatedBy: .equal, toItem: self.navigationController?.view, attribute: .centerX, multiplier: 1, constant: 0).isActive = true
+        NSLayoutConstraint.init(item: self.loadingControl, attribute: .centerY, relatedBy: .equal, toItem: self.navigationController?.view, attribute: .centerY, multiplier: 1, constant: 0).isActive = true
         NSLayoutConstraint.init(item: self.mediaCollectionView, attribute: .top, relatedBy: .equal, toItem: self.view, attribute: .topMargin, multiplier: 1, constant: 0).isActive = true
         NSLayoutConstraint.init(item: self.mediaCollectionView, attribute: .leading, relatedBy: .equal, toItem: self.view, attribute: .leading, multiplier: 1, constant: 0).isActive = true
         NSLayoutConstraint.init(item: self.mediaCollectionView, attribute: .trailing, relatedBy: .equal, toItem: self.view, attribute: .trailing, multiplier: 1, constant: 0).isActive = true
         NSLayoutConstraint.init(item: self.mediaCollectionView, attribute: .bottom, relatedBy: .equal, toItem: self.view, attribute: .bottomMargin, multiplier: 1, constant: 0).isActive = true
         NSLayoutConstraint.init(item: self.noLabel, attribute: .centerX, relatedBy: .equal, toItem: self.view, attribute: .centerX, multiplier: 1, constant: 0).isActive = true
         NSLayoutConstraint.init(item: self.noLabel, attribute: .centerY, relatedBy: .equal, toItem: self.view, attribute: .centerY, multiplier: 1, constant: 0).isActive = true
-
+        self.albumListTableView.frame = CGRect.zero
+        
         self.controlLoadProcess()
     }
     
@@ -87,6 +91,8 @@ class SFAlbumPickerRootViewController: UIViewController,UICollectionViewDelegate
     private func beginLoadingAnimation() -> Void {
         self.view.isUserInteractionEnabled = false
         self.navigationItem.leftBarButtonItem?.isEnabled = false
+        self.navigationItem.rightBarButtonItem?.isEnabled = false
+        self.titleButton.isEnabled = false
         self.loadingControl.startAnimating()
     }
     
@@ -94,6 +100,8 @@ class SFAlbumPickerRootViewController: UIViewController,UICollectionViewDelegate
         self.loadingControl.stopAnimating()
         self.view.isUserInteractionEnabled = true
         self.navigationItem.leftBarButtonItem?.isEnabled = true
+        self.navigationItem.rightBarButtonItem?.isEnabled = true
+        self.titleButton.isEnabled = true
     }
     // MARK: - public interfaces
     internal func inputSettings(_ settingClosure:@escaping((SFAlbumPickerViewControllerSettingsModel) -> Void)) -> Void {
@@ -117,8 +125,12 @@ class SFAlbumPickerRootViewController: UIViewController,UICollectionViewDelegate
     }
     
     @objc private func titleButtonAction(_ sender:UIButton) -> Void {
-        self.beginLoadingAnimation()
-        
+        if self.albumListTableView.frame.height != 0 {
+            self.albumListTableView.frame = CGRect.zero
+        } else {
+            self.beginLoadingAnimation()
+            self.viewModel.loadAllAlbums()
+        }
     }
     // MARK: - accessors
     internal var delegate:SFAlbumPickerViewControllerProtocol?
@@ -138,6 +150,7 @@ class SFAlbumPickerRootViewController: UIViewController,UICollectionViewDelegate
         result.showsHorizontalScrollIndicator = false
         result.showsVerticalScrollIndicator = false
         result.dataSource = self
+        result.backgroundColor = .clear
         result.register(SFAlbumPickerCollectionTableViewCell.self, forCellReuseIdentifier: self.viewModel.ablumCellIdentifier)
         return result
     }()
@@ -219,14 +232,19 @@ class SFAlbumPickerRootViewController: UIViewController,UICollectionViewDelegate
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let result:SFAlbumPickerCollectionTableViewCell = tableView.dequeueReusableCell(withIdentifier: self.viewModel.ablumCellIdentifier, for: indexPath) as
+        let result:SFAlbumPickerCollectionTableViewCell = tableView.dequeueReusableCell(withIdentifier: self.viewModel.ablumCellIdentifier, for: indexPath) as! SFAlbumPickerCollectionTableViewCell
+        result.model = self.viewModel.tableCellModels[indexPath.row]
         return result
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return self.viewModel.tableCellModels.count
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        self.beginLoadingAnimation()
+        self.albumListTableView.frame = CGRect.zero
+        self.viewModel.loadSpecificCollection(self.viewModel.tableCellModels[indexPath.row])
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
@@ -251,5 +269,13 @@ class SFAlbumPickerRootViewController: UIViewController,UICollectionViewDelegate
     
     func SFAlbumPickerViewModelRefetch(_ viewModel: SFAlbumPickerViewModel) {
         self.controlLoadProcess()
+    }
+    
+    func SFAlbumPickerViewModelEndFetchCollections(_ viewModel: SFAlbumPickerViewModel, _ success: Bool, _ errorType: SFAlbumPickerErrorType) {
+        DispatchQueue.main.async {
+            self.endLoadingAnimation()
+            self.albumListTableView.reloadData()
+            self.albumListTableView.frame = self.view.bounds
+        }
     }
 }

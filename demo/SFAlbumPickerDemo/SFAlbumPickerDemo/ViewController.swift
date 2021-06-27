@@ -42,7 +42,7 @@ class ViewController: UIViewController,SFAlbumPickerViewControllerProtocol {
     }
     
     func SFAlbumPickerViewControllerShouldCustomFetch(_ controller: SFAlbumPickerViewController) -> Bool {
-        return true
+        return false
     }
     
     func SFAlbumPickerViewControllerInputCustomAssets(_ controller: SFAlbumPickerViewController) -> [PHAsset] {

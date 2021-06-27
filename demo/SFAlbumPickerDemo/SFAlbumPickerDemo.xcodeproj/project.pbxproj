@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		1D25E72E26816D36005750BD /* SFAlbumPickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D25E72D26816D36005750BD /* SFAlbumPickerViewController.swift */; };
 		1D38CD222682D40B000FCC88 /* SFAlbumPickerExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D38CD212682D40B000FCC88 /* SFAlbumPickerExtensions.swift */; };
+		1D6AE5FE2688A9970094B9AA /* SFAlbumPickerCollectionTableViewCellModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D6AE5FD2688A9970094B9AA /* SFAlbumPickerCollectionTableViewCellModel.swift */; };
 		1D700F1026876BD4000725B2 /* SFAlbumPickerCollectionTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D700F0F26876BD4000725B2 /* SFAlbumPickerCollectionTableViewCell.swift */; };
 		1DEF9A532680295C00544D66 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DEF9A522680295C00544D66 /* AppDelegate.swift */; };
 		1DEF9A552680295C00544D66 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DEF9A542680295C00544D66 /* SceneDelegate.swift */; };
@@ -45,6 +46,7 @@
 /* Begin PBXFileReference section */
 		1D25E72D26816D36005750BD /* SFAlbumPickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFAlbumPickerViewController.swift; sourceTree = "<group>"; };
 		1D38CD212682D40B000FCC88 /* SFAlbumPickerExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFAlbumPickerExtensions.swift; sourceTree = "<group>"; };
+		1D6AE5FD2688A9970094B9AA /* SFAlbumPickerCollectionTableViewCellModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFAlbumPickerCollectionTableViewCellModel.swift; sourceTree = "<group>"; };
 		1D700F0F26876BD4000725B2 /* SFAlbumPickerCollectionTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFAlbumPickerCollectionTableViewCell.swift; sourceTree = "<group>"; };
 		1DEF9A4F2680295C00544D66 /* SFAlbumPickerDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SFAlbumPickerDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1DEF9A522680295C00544D66 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -156,6 +158,7 @@
 				1D38CD212682D40B000FCC88 /* SFAlbumPickerExtensions.swift */,
 				1DFFFCD22686DCED00B18AB4 /* SFAlbumPickerViewControllerSettingsModel.swift */,
 				1D700F0F26876BD4000725B2 /* SFAlbumPickerCollectionTableViewCell.swift */,
+				1D6AE5FD2688A9970094B9AA /* SFAlbumPickerCollectionTableViewCellModel.swift */,
 			);
 			path = SFAlbumPicker;
 			sourceTree = "<group>";
@@ -292,6 +295,7 @@
 			files = (
 				1DEF9A8A26802AB500544D66 /* SFAlbumPickerViewCollectionViewCell.swift in Sources */,
 				1D25E72E26816D36005750BD /* SFAlbumPickerViewController.swift in Sources */,
+				1D6AE5FE2688A9970094B9AA /* SFAlbumPickerCollectionTableViewCellModel.swift in Sources */,
 				1DEF9A8926802AB500544D66 /* SFAlbumPickerViewModel.swift in Sources */,
 				1D38CD222682D40B000FCC88 /* SFAlbumPickerExtensions.swift in Sources */,
 				1DFFFCD32686DCED00B18AB4 /* SFAlbumPickerViewControllerSettingsModel.swift in Sources */,

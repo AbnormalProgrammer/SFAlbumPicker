@@ -60,7 +60,7 @@ class SFAlbumPickerViewModel: NSObject,PHPhotoLibraryChangeObserver {
             return
         }
         DispatchQueue.global().async {
-            let fetchResult:PHFetchResult<PHAsset> = PHAsset.fetchAssets(with: self.fetchOptions)
+            let fetchResult:PHFetchResult<PHAsset> = PHAsset.fetchAssets(with: self.fetchOption)
             self.currentFetchResult = fetchResult
             var assets:[PHAsset] = [PHAsset].init()
             fetchResult.enumerateObjects { (asset, index, stop) in
@@ -113,10 +113,80 @@ class SFAlbumPickerViewModel: NSObject,PHPhotoLibraryChangeObserver {
      
      */
     internal func loadAllAlbums() -> Void {
-        let collections:PHFetchResult<PHCollectionList> = PHCollectionList.fetchCollectionLists(with: .folder, subtype: .any, options: self.fetchOption)
-        let collectionItem:ph
-        for <#item#> in <#items#> {
-            <#code#>
+        DispatchQueue.global().async {
+            self.currentCollectionItems = []
+            self.localTableCellModels = []
+            let status:SFAlbumPickerErrorType = self.requestAuthorization()
+            if status != .NoError {
+                self.delegate?.SFAlbumPickerViewModelFinishFetch(self, false, .NotAuthorized)
+                return
+            }
+            let resultCollections:PHFetchResult<PHAssetCollection> = PHAssetCollection.fetchAssetCollections(with: .smartAlbum, subtype: .albumRegular, options: nil)
+            resultCollections.enumerateObjects { (someCollection, index, stop) in
+                self.currentCollectionItems.append(someCollection)
+            }
+            /*获取每个相册第一个asset的图像的缩略图*/
+            for index in 0..<self.currentCollectionItems.count {
+                let thisCollection:PHAssetCollection = self.currentCollectionItems[index]
+                let newCellModel:SFAlbumPickerCollectionTableViewCellModel = SFAlbumPickerCollectionTableViewCellModel.init()
+                newCellModel.associatedCollection = thisCollection
+                newCellModel.displayName = thisCollection.localizedTitle ?? ""
+                if thisCollection.canContainAssets == true {
+                    var resultAsset:PHAsset?
+                    let assets:PHFetchResult<PHAsset> = PHAsset.fetchAssets(in: thisCollection, options: self.fetchOption)
+                    newCellModel.assetCount = assets.count
+                    assets.enumerateObjects { (asset, index, stop) in
+                        if index == 0 {
+                            resultAsset = asset
+                        } else {
+                            stop.pointee = false
+                        }
+                    }
+                    guard resultAsset != nil else {
+                        continue
+                    }
+                    let options:PHImageRequestOptions = PHImageRequestOptions.init()
+                    options.deliveryMode = .opportunistic
+                    options.isSynchronous = true
+                    options.isNetworkAccessAllowed = false
+                    options.version = .original
+                    PHImageManager.default().requestImage(for: resultAsset!, targetSize: CGSize.init(width: 80, height: 80), contentMode: .aspectFill, options: options) { (image, info) in
+                        guard image != nil else {
+                            return
+                        }
+                        newCellModel.thumbnailImage = image!
+                    }
+                    self.localTableCellModels.append(newCellModel)
+                }
+            }
+            self.delegate?.SFAlbumPickerViewModelEndFetchCollections(self, true, .NoError)
+        }
+    }
+    
+    internal func loadSpecificCollection(_ model:SFAlbumPickerCollectionTableViewCellModel) -> Void {
+        DispatchQueue.global().async {
+            self.mediaModels = []
+            let status:SFAlbumPickerErrorType = self.requestAuthorization()
+            if status != .NoError {
+                self.delegate?.SFAlbumPickerViewModelFinishFetch(self, false, .NotAuthorized)
+                return
+            }
+            let fetchResult:PHFetchResult<PHAsset> = PHAsset.fetchAssets(in: model.associatedCollection!, options: self.fetchOption)
+            var assets:[PHAsset] = []
+            fetchResult.enumerateObjects { (asset, index, stop) in
+                assets.append(asset)
+            }
+            for iterator in assets {
+                PHCachingImageManager.default().requestImage(for: iterator, targetSize: CGSize.init(width: self.itemWidth, height: self.itemWidth), contentMode: .aspectFit, options: self.requestOption) { (image, info) in
+                    if image != nil {
+                        let newModel:SFAlbumPickerViewMediaModel = SFAlbumPickerViewMediaModel.init()
+                        newModel.asset = iterator
+                        newModel.thumbnailImage = image
+                        self.mediaModels.append(newModel)
+                    }
+                }
+            }
+            self.delegate?.SFAlbumPickerViewModelFinishFetch(self, true, .NoError)
         }
     }
     // MARK: - actions
@@ -124,6 +194,8 @@ class SFAlbumPickerViewModel: NSObject,PHPhotoLibraryChangeObserver {
     weak internal var delegate:SFAlbumPickerViewModelProtocol?
     
     private var currentFetchResult:PHFetchResult<PHAsset>?
+    private var currentCollectionItems:[PHAssetCollection] = []
+    private var localTableCellModels:[SFAlbumPickerCollectionTableViewCellModel] = []
     lazy private var fetchOption:PHFetchOptions = {
         let fetchOptions:PHFetchOptions = PHFetchOptions.init()
         fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: true)]
@@ -138,6 +210,11 @@ class SFAlbumPickerViewModel: NSObject,PHPhotoLibraryChangeObserver {
         return requestOption
     }()
     
+    internal var tableCellModels:[SFAlbumPickerCollectionTableViewCellModel] {
+        get {
+            return self.localTableCellModels
+        }
+    }
     internal let itemIdentifier:String = "LPLibraryViewCollectionViewCell"
     internal let ablumCellIdentifier:String = "SFAlbumPickerCollectionTableViewCell"
     internal let ablumCellHeight:CGFloat = 100//相册单元格的高度
