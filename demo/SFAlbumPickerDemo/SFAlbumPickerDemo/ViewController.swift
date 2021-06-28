@@ -28,7 +28,7 @@ class ViewController: UIViewController,SFAlbumPickerViewControllerProtocol {
         let pickerController:SFAlbumPickerViewController = SFAlbumPickerViewController.create()
         pickerController.pickerDelegate = self
         pickerController.inputSettings { (settingModel) in
-            settingModel.maxSelectionNumber = 0
+            settingModel.maxSelectionNumber = 2
         }
         pickerController.modalPresentationStyle = .fullScreen
         self.present(pickerController, animated: true) {
@@ -39,14 +39,6 @@ class ViewController: UIViewController,SFAlbumPickerViewControllerProtocol {
     }
     
     func SFAlbumPickerViewControllerFailureCallback(_ controller: SFAlbumPickerViewController, _ type: SFAlbumPickerErrorType) {
-    }
-    
-    func SFAlbumPickerViewControllerShouldCustomFetch(_ controller: SFAlbumPickerViewController) -> Bool {
-        return false
-    }
-    
-    func SFAlbumPickerViewControllerInputCustomAssets(_ controller: SFAlbumPickerViewController) -> [PHAsset] {
-        return []
     }
 }
 
