@@ -20,5 +20,52 @@
 ## 原理
 `PHAssetCollection`继承自`PHCollection`它是相簿的抽象，代表了某个相簿，比如“最近”相簿。<br>
 `PHAsset`是媒体数据的抽象，代表了某个具体的媒体数据，比如一张照片，一个视频。<br>
-`PHFetchResult`是一个容器类型，专门用于相册检索，它代表的是抓取到的指定类型的媒体数据集。
-`PHPhotoLibrary`是相册APP的抽象，
+`PHFetchResult`是一个容器类型，专门用于相册检索，它代表的是抓取到的指定类型的媒体数据集。<br>
+`PHPhotoLibrary`是相册APP的抽象，通过它可以监听到相册数据的一举一动。<br>
+首先通过`PHAssetCollection`去获取所有相簿的数据，放到`PHFetchResult`中，形成一个个相簿列表。然后针对每个相簿，使用`PHAsset`抓取单个相册中的媒体数据，放到另一个`PHFetchResult`中。每次展示某个相簿的数据实际上就是展示该相簿的每个`PHAsset`。每次监听到相簿数据变化就重新抓取该相簿的数据。<br>
+像这种选图页iOS自带了一个`PHPickerViewController`可供选择。
+## 默认设定
+在默认情况下，该demo展示的是整个相册APP中的所有媒体数据。
+## 代码展示
+```
+import UIKit
+import Photos
+
+class ViewController: UIViewController,SFAlbumPickerViewControllerProtocol {
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        self.view.backgroundColor = .systemBlue
+        self.view.addGestureRecognizer(UITapGestureRecognizer.init(target: self, action: #selector(popPickerAction)))
+        let promotionLabel:UILabel = UILabel.init()
+        promotionLabel.translatesAutoresizingMaskIntoConstraints = false
+        promotionLabel.font = UIFont.systemFont(ofSize: 30)
+        promotionLabel.text = "点我"
+        promotionLabel.textColor = .white
+        self.view.addSubview(promotionLabel)
+        NSLayoutConstraint.init(item: promotionLabel, attribute: .centerX, relatedBy: .equal, toItem: self.view, attribute: .centerX, multiplier: 1, constant: 0).isActive = true
+        NSLayoutConstraint.init(item: promotionLabel, attribute: .centerY, relatedBy: .equal, toItem: self.view, attribute: .centerY, multiplier: 1, constant: 0).isActive = true
+        // Do any additional setup after loading the view.
+    }
+    
+    @objc private func popPickerAction() -> Void {
+        let pickerController:SFAlbumPickerViewController = SFAlbumPickerViewController.create()
+        pickerController.pickerDelegate = self
+        pickerController.inputSettings { (settingModel) in
+            settingModel.maxSelectionNumber = 2
+        }
+        pickerController.modalPresentationStyle = .fullScreen
+        self.present(pickerController, animated: true) {
+        }
+    }
+    
+    func SFAlbumPickerViewControllerCallbackAsset(_ controller: SFAlbumPickerViewController, _ assets: [PHAsset]) {
+    }
+    
+    func SFAlbumPickerViewControllerFailureCallback(_ controller: SFAlbumPickerViewController, _ type: SFAlbumPickerErrorType) {
+    }
+}
+```
+## 环境
+Swift 5.0<br>
+XCode 12<br>
+iOS 14<br>
